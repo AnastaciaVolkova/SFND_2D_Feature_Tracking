@@ -4,6 +4,7 @@
 #include <sstream>
 #include <iomanip>
 #include <vector>
+#include <list>
 #include <cmath>
 #include <limits>
 #include <opencv2/core.hpp>
@@ -18,10 +19,46 @@
 
 using namespace std;
 
+template<class T>
+class CircleBuffer : public list<T>{
+public:
+    class iterator{
+    private:
+        typename list<T>::iterator it_;
+    public:
+        iterator(typename list<T>::iterator i){it_ = i;};
+        iterator& operator-(int v){
+            for (int i = 0; i < v; i++ )
+                it_--;
+            return *this;
+        };
+        bool operator!=(const iterator& it){
+            return it_ != it.it_;
+        };
+        iterator& operator++(int i){
+            it_++;
+            return *this;
+        };
+        T& operator*(){return *it_;};
+        typename list<T>::iterator operator->(){return it_;};
+    };
+    void push_back(const T& x){
+        if (list<T>::size() == data_buffer_size_){
+            list<T>::erase(list<T>::begin());
+        }
+        list<T>::push_back(x);
+    };
+    CircleBuffer(int dataBufferSize):data_buffer_size_(dataBufferSize){};
+    iterator begin(){return iterator(list<T>::begin());};
+    iterator end(){return iterator(list<T>::end());};
+    private:
+    int data_buffer_size_;
+};
+
+#include <iostream>
 /* MAIN PROGRAM */
 int main(int argc, const char *argv[])
 {
-
     /* INIT VARIABLES AND DATA STRUCTURES */
 
     // data location
@@ -36,8 +73,8 @@ int main(int argc, const char *argv[])
     int imgFillWidth = 4;  // no. of digits which make up the file index (e.g. img-0001.png)
 
     // misc
-    int dataBufferSize = 2;       // no. of images which are held in memory (ring buffer) at the same time
-    vector<DataFrame> dataBuffer; // list of data frames which are held in memory at the same time
+    int dataBufferSize = 2; // no. of images which are held in memory (ring buffer) at the same time
+    CircleBuffer<DataFrame> dataBuffer(dataBufferSize); // list of data frames which are held in memory at the same time
     bool bVis = false;            // visualize results
 
     /* MAIN LOOP OVER ALL IMAGES */
@@ -56,8 +93,8 @@ int main(int argc, const char *argv[])
         img = cv::imread(imgFullFilename);
         cv::cvtColor(img, imgGray, cv::COLOR_BGR2GRAY);
 
-        //// STUDENT ASSIGNMENT
         //// TASK MP.1 -> replace the following code with ring buffer of size dataBufferSize
+        // Done in class CircleBuffer
 
         // push image into data frame buffer
         DataFrame frame;
