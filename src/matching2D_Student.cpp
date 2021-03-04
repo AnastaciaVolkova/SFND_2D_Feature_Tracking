@@ -101,3 +101,45 @@ void detKeypointsShiTomasi(vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool b
         cv::waitKey(0);
     }
 }
+
+void detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool bVis){
+    int block_size = 2;
+    int aperture_size = 3;
+    double k = 0.04;
+    int threshold = 100;
+    double overlap = 0;
+
+    cv::Mat dst = cv::Mat::zeros(img.size(), CV_32FC1);
+    cv::cornerHarris(img, dst, block_size, aperture_size, k, cv::BORDER_DEFAULT);
+    cv::Mat dst_norm, dst_norm_scaled;
+    cv::normalize(dst, dst_norm, 0, 255, cv::NORM_MINMAX, CV_32FC1, cv::Mat());
+    cv::convertScaleAbs(dst_norm, dst_norm_scaled);
+
+    std::vector<cv::KeyPoint> key_points;
+    for (int i = 0; i < dst_norm.rows; i++){
+        for (int j = 0; j < dst_norm.cols; j++){
+            int response = dst_norm.at<char>(i, j);
+            cv::KeyPoint cur_key_point(j, i, 2*aperture_size);
+            if (response >= threshold){
+                bool to_add = true;
+                for (auto kp: key_points) {
+                    if (cv::KeyPoint::overlap(cur_key_point, kp) < overlap){
+                        to_add = false;
+                        break;
+                    }
+                }
+                if (to_add)
+                    key_points.push_back(cur_key_point);
+            }
+        }
+    }
+
+    if (bVis){
+        std::string window_name = "Harris corner detector";
+        cv::namedWindow(window_name, 6);
+        cv::Mat vis_image = img.clone();
+        cv::drawKeypoints(img, key_points, vis_image, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+        cv::imshow(window_name, vis_image);
+        cv::waitKey(0);
+    }
+};
