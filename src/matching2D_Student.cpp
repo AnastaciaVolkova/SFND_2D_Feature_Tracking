@@ -3,6 +3,8 @@
 
 using namespace std;
 
+#define WRITE_IMAGE
+
 // Find best matches for keypoints in two camera images based on several matching methods
 void matchDescriptors(std::vector<cv::KeyPoint> &kPtsSource, std::vector<cv::KeyPoint> &kPtsRef, cv::Mat &descSource, cv::Mat &descRef,
                       std::vector<cv::DMatch> &matches, std::string descriptorType, std::string matcherType, std::string selectorType)
@@ -99,6 +101,10 @@ void detKeypointsShiTomasi(vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool b
         cv::namedWindow(windowName, 6);
         imshow(windowName, visImage);
         cv::waitKey(0);
+#if  defined(WRITE_IMAGE)
+        static int img_num = 0;
+        cv::imwrite(string("Shi_Tomasi_") + to_string(img_num++) + string(".jpg"), visImage);
+#endif
     }
 }
 
@@ -110,20 +116,23 @@ void detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool
     double overlap = 0;
 
     cv::Mat dst = cv::Mat::zeros(img.size(), CV_32FC1);
+
+    double t = (double)cv::getTickCount();
     cv::cornerHarris(img, dst, block_size, aperture_size, k, cv::BORDER_DEFAULT);
     cv::Mat dst_norm, dst_norm_scaled;
     cv::normalize(dst, dst_norm, 0, 255, cv::NORM_MINMAX, CV_32FC1, cv::Mat());
     cv::convertScaleAbs(dst_norm, dst_norm_scaled);
 
     std::vector<cv::KeyPoint> key_points;
-    for (int i = 0; i < dst_norm.rows; i++){
-        for (int j = 0; j < dst_norm.cols; j++){
-            int response = dst_norm.at<char>(i, j);
-            cv::KeyPoint cur_key_point(j, i, 2*aperture_size);
-            if (response >= threshold){
+    for (int i = 0; i < dst_norm_scaled.rows; i++){
+        for (int j = 0; j < dst_norm_scaled.cols; j++){
+            cv::KeyPoint cur_key_point(j, i, 2*aperture_size, -1, dst_norm_scaled.at<char>(i, j));
+            if (cur_key_point.response >= threshold){
                 bool to_add = true;
                 for (auto kp: key_points) {
-                    if (cv::KeyPoint::overlap(cur_key_point, kp) < overlap){
+                    if (cv::KeyPoint::overlap(cur_key_point, kp) > overlap){
+                        if (cur_key_point.response>kp.response)
+                            kp = cur_key_point;
                         to_add = false;
                         break;
                     }
@@ -133,13 +142,19 @@ void detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool
             }
         }
     }
+    t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
+    cout << "Harris corner detector with n=" << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
 
     if (bVis){
         std::string window_name = "Harris corner detector";
         cv::namedWindow(window_name, 6);
         cv::Mat vis_image = img.clone();
-        cv::drawKeypoints(img, key_points, vis_image, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+        cv::drawKeypoints(dst_norm_scaled, key_points, vis_image, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
         cv::imshow(window_name, vis_image);
         cv::waitKey(0);
+#if  defined(WRITE_IMAGE)
+        static int img_num = 0;
+        cv::imwrite(string("HARRIS_") + to_string(img_num++) + string(".jpg"), vis_image);
+#endif
     }
 };
