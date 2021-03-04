@@ -158,38 +158,28 @@ void detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool
     }
 };
 
-void detKeypointsFAST(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool bVis){
-    int threshold = 100;
-    double t = (double)cv::getTickCount();
-    cv::FAST(img, keypoints, threshold);
-    t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
-    cout << "FAST feature detector with n=" << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+void detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, std::string detectorType, bool bVis){
+    cv::Ptr<cv::FeatureDetector> detector;
+    if (detectorType.compare("FAST"))
+        detector = cv::FastFeatureDetector::create();
+    else if (detectorType.compare("BRISK"))
+        detector = cv::BRISK::create();
+    else if (detectorType.compare("ORB"))
+        detector = cv::ORB::create();
+    else if (detectorType.compare("AKAZE"))
+        detector = cv::AKAZE::create();
+    else if (detectorType.compare("SIFT"))
+        detector = cv::SIFT::create();
+    else
+        throw "Invalid detector type";
 
-    if (bVis){
-        std::string window_name = "FAST feature detector";
-        cv::namedWindow(window_name, 6);
-        cv::Mat vis_image = img.clone();
-        cv::drawKeypoints(img, keypoints, vis_image, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
-        cv::imshow(window_name, vis_image);
-        cv::waitKey(0);
-#if  defined(WRITE_IMAGE)
-        static int img_num = 0;
-        cv::imwrite(string("FAST_") + to_string(img_num++) + string(".jpg"), vis_image);
-#endif
-    }
-};
-
-void detKeypointsBRISK(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool bVis){
-
-    cv::Mat dst = cv::Mat::zeros(img.size(), CV_32FC1);
-    cv::Ptr<cv::FeatureDetector> detector = cv::BRISK::create();
     double t = (double)cv::getTickCount();
     detector->detect(img, keypoints);
     t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
-    cout << "BRISK detector with n= " << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+    cout << detectorType + " detector with n= " << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
 
     if (bVis){
-        std::string window_name = "BRISK feature detector";
+        std::string window_name = detectorType + " feature detector";
         cv::namedWindow(window_name, 6);
         cv::Mat vis_image = img.clone();
         cv::drawKeypoints(img, keypoints, vis_image, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
@@ -197,7 +187,7 @@ void detKeypointsBRISK(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool 
         cv::waitKey(0);
 #if  defined(WRITE_IMAGE)
         static int img_num = 0;
-        cv::imwrite(string("BRISK_") + to_string(img_num++) + string(".jpg"), vis_image);
+        cv::imwrite(string(detectorType + "_") + to_string(img_num++) + string(".jpg"), vis_image);
 #endif
     }
 };

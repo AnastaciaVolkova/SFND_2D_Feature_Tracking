@@ -77,6 +77,12 @@ int main(int argc, const char *argv[])
     CircleBuffer<DataFrame> dataBuffer(dataBufferSize); // list of data frames which are held in memory at the same time
     bool bVis = false;            // visualize results
 
+    string detectorType;
+    if (argc < 2)
+        detectorType = "SHITOMASI";
+    else
+        detectorType = argv[1];
+
     /* MAIN LOOP OVER ALL IMAGES */
 
     for (size_t imgIndex = 0; imgIndex <= imgEndIndex - imgStartIndex; imgIndex++)
@@ -93,8 +99,8 @@ int main(int argc, const char *argv[])
         img = cv::imread(imgFullFilename);
         cv::cvtColor(img, imgGray, cv::COLOR_BGR2GRAY);
 
-        //// TASK MP.1 -> replace the following code with ring buffer of size dataBufferSize
-        // Done in class CircleBuffer
+        //// Done MP.1 -> replace the following code with ring buffer of size dataBufferSize
+        // Done in class CircleBuffer line 23
 
         // push image into data frame buffer
         DataFrame frame;
@@ -108,20 +114,18 @@ int main(int argc, const char *argv[])
 
         // extract 2D keypoints from current image
         vector<cv::KeyPoint> keypoints; // create empty feature list for current image
-        string detectorType = "SHITOMASI";
 
         //// STUDENT ASSIGNMENT
         //// TASK MP.2 -> add the following keypoint detectors in file matching2D.cpp and enable string-based selection based on detectorType
         //// -> HARRIS, FAST, BRISK, ORB, AKAZE, SIFT
 
         if (detectorType.compare("SHITOMASI") == 0)
-        {
-            detKeypointsShiTomasi(keypoints, imgGray, false);
-        }
+            detKeypointsShiTomasi(keypoints, imgGray, true);
+        else if (detectorType.compare("HARRIS") == 0)
+            detKeypointsHarris(keypoints, imgGray, true);
         else
-        {
-            //...
-        }
+            detKeypointsModern(keypoints, imgGray, detectorType, true);
+
         //// EOF STUDENT ASSIGNMENT
 
         //// STUDENT ASSIGNMENT
