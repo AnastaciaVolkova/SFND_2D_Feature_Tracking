@@ -159,14 +159,7 @@ void detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool
 };
 
 void detKeypointsFAST(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool bVis){
-    int block_size = 2;
-    int aperture_size = 3;
-    double k = 0.04;
     int threshold = 100;
-    double overlap = 0;
-
-    cv::Mat dst = cv::Mat::zeros(img.size(), CV_32FC1);
-
     double t = (double)cv::getTickCount();
     cv::FAST(img, keypoints, threshold);
     t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
