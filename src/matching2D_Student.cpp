@@ -185,3 +185,26 @@ void detKeypointsFAST(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool b
 #endif
     }
 };
+
+void detKeypointsBRISK(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool bVis){
+
+    cv::Mat dst = cv::Mat::zeros(img.size(), CV_32FC1);
+    cv::Ptr<cv::FeatureDetector> detector = cv::BRISK::create();
+    double t = (double)cv::getTickCount();
+    detector->detect(img, keypoints);
+    t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
+    cout << "BRISK detector with n= " << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+
+    if (bVis){
+        std::string window_name = "BRISK feature detector";
+        cv::namedWindow(window_name, 6);
+        cv::Mat vis_image = img.clone();
+        cv::drawKeypoints(img, keypoints, vis_image, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+        cv::imshow(window_name, vis_image);
+        cv::waitKey(0);
+#if  defined(WRITE_IMAGE)
+        static int img_num = 0;
+        cv::imwrite(string("BRISK_") + to_string(img_num++) + string(".jpg"), vis_image);
+#endif
+    }
+};
