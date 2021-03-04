@@ -158,3 +158,31 @@ void detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool
 #endif
     }
 };
+
+void detKeypointsFAST(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool bVis){
+    int block_size = 2;
+    int aperture_size = 3;
+    double k = 0.04;
+    int threshold = 100;
+    double overlap = 0;
+
+    cv::Mat dst = cv::Mat::zeros(img.size(), CV_32FC1);
+
+    double t = (double)cv::getTickCount();
+    cv::FAST(img, keypoints, threshold);
+    t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
+    cout << "FAST feature detector with n=" << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+
+    if (bVis){
+        std::string window_name = "FAST feature detector";
+        cv::namedWindow(window_name, 6);
+        cv::Mat vis_image = img.clone();
+        cv::drawKeypoints(img, keypoints, vis_image, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+        cv::imshow(window_name, vis_image);
+        cv::waitKey(0);
+#if  defined(WRITE_IMAGE)
+        static int img_num = 0;
+        cv::imwrite(string("FAST_") + to_string(img_num++) + string(".jpg"), vis_image);
+#endif
+    }
+};
