@@ -78,10 +78,16 @@ int main(int argc, const char *argv[])
     bool bVis = false;            // visualize results
 
     string detectorType;
+    string descriptorType;
     if (argc < 2)
         detectorType = "SHITOMASI";
     else
         detectorType = argv[1];
+
+    if (argc < 3)
+        descriptorType = "BRISK";
+    else
+        descriptorType = argv[2];
 
     /* MAIN LOOP OVER ALL IMAGES */
 
@@ -174,11 +180,11 @@ int main(int argc, const char *argv[])
         /* EXTRACT KEYPOINT DESCRIPTORS */
 
         //// STUDENT ASSIGNMENT
-        //// TASK MP.4 -> add the following descriptors in file matching2D.cpp and enable string-based selection based on descriptorType
+        //// Done MP.4 -> add the following descriptors in file matching2D.cpp and enable string-based selection based on descriptorType
         //// -> BRIEF, ORB, FREAK, AKAZE, SIFT
 
         cv::Mat descriptors;
-        string descriptorType = "BRISK"; // BRIEF, ORB, FREAK, AKAZE, SIFT
+
         descKeypoints((dataBuffer.end() - 1)->keypoints, (dataBuffer.end() - 1)->cameraImg, descriptors, descriptorType);
         //// EOF STUDENT ASSIGNMENT
 
