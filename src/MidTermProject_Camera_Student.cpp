@@ -56,8 +56,13 @@ public:
     int data_buffer_size_;
 };
 
-void ReadCommandLine(int argc, const char* argv[], string& detectorType, string& descriptorType, string& matcherType, string& selectorType){
+bool ReadCommandLine(int argc, const char* argv[], string& detectorType, string& descriptorType, string& matcherType, string& selectorType){
     int i = 1;
+    if ( (argc == 2) && (std::string(argv[1]) == std::string("-h") ) ){
+        std::cout << "-det detectorType -des descriptorType -mat matcherType -sel selectorType" << std::endl;
+        return -1;
+    }
+
     while(i < argc-1){
         std::string us_in = string(argv[i++]);
         if  (us_in == "-det")
@@ -68,10 +73,13 @@ void ReadCommandLine(int argc, const char* argv[], string& detectorType, string&
             matcherType = argv[i++];
         else if (us_in == "-sel")
             selectorType = argv[i++];
-        else if (us_in == "-h"){
+        else{
+            std::cout << "Invalid command line" << std::endl;
             std::cout << "-det detectorType -des descriptorType -mat matcherType -sel selectorType" << std::endl;
+            return -1;
         }
     }
+    return 0;
 };
 
 /* MAIN PROGRAM */
@@ -104,7 +112,8 @@ int main(int argc, const char *argv[])
     // descriptorType BRISK BRIEF, ORB, FREAK, AKAZE, SIFT
     // matcherType MAT_BF, MAT_FLANN
     // selectorType SEL_NN, SEL_KNN
-    ReadCommandLine(argc, argv, detectorType, descriptorType, matcherType, selectorType);
+    if (ReadCommandLine(argc, argv, detectorType, descriptorType, matcherType, selectorType))
+        return -1;
 
     /* MAIN LOOP OVER ALL IMAGES */
 
