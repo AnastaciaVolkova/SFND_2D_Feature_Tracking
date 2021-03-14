@@ -7,6 +7,7 @@
 #include <list>
 #include <cmath>
 #include <limits>
+#include <string>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -55,7 +56,24 @@ public:
     int data_buffer_size_;
 };
 
-#include <iostream>
+void ReadCommandLine(int argc, const char* argv[], string& detectorType, string& descriptorType, string& matcherType, string& selectorType){
+    int i = 1;
+    while(i < argc-1){
+        std::string us_in = string(argv[i++]);
+        if  (us_in == "-det")
+            detectorType = argv[i++];
+        else if (us_in == "-des")
+            descriptorType = argv[i++];
+        else if (us_in == "-mat")
+            matcherType = argv[i++];
+        else if (us_in == "-sel")
+            selectorType = argv[i++];
+        else if (us_in == "-h"){
+            std::cout << "-det detectorType -des descriptorType -mat matcherType -sel selectorType" << std::endl;
+        }
+    }
+};
+
 /* MAIN PROGRAM */
 int main(int argc, const char *argv[])
 {
@@ -77,31 +95,16 @@ int main(int argc, const char *argv[])
     CircleBuffer<DataFrame> dataBuffer(dataBufferSize); // list of data frames which are held in memory at the same time
     bool bVis = false;            // visualize results
 
-    string detectorType;
-    string descriptorType;
-    string matcherType;
-    string selectorType;
+    string detectorType("SHITOMASI");
+    string descriptorType("BRISK");
+    string matcherType ("MAT_BF");
+    string selectorType("SEL_NN");
 
-    if (argc < 2) // HARRIS, FAST, BRISK, ORB, AKAZE, SIFT
-        detectorType = "SHITOMASI";
-    else
-        detectorType = argv[1];
-
-    if (argc < 3) // BRIEF, ORB, FREAK, AKAZE, SIFT
-        descriptorType = "BRISK";
-    else
-        descriptorType = argv[2];
-
-    if (argc < 4) // MAT_BF, MAT_FLANN
-        matcherType = "MAT_BF";
-    else
-        matcherType = argv[3];
-
-    if (argc < 5) // SEL_NN, SEL_KNN
-        selectorType = "SEL_NN";
-    else
-        selectorType = argv[4];
-
+    // detectorType SHITOMASI, HARRIS, FAST, BRISK, ORB, AKAZE, SIFT
+    // descriptorType BRISK BRIEF, ORB, FREAK, AKAZE, SIFT
+    // matcherType MAT_BF, MAT_FLANN
+    // selectorType SEL_NN, SEL_KNN
+    ReadCommandLine(argc, argv, detectorType, descriptorType, matcherType, selectorType);
 
     /* MAIN LOOP OVER ALL IMAGES */
 
