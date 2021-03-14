@@ -79,15 +79,29 @@ int main(int argc, const char *argv[])
 
     string detectorType;
     string descriptorType;
-    if (argc < 2)
+    string matcherType;
+    string selectorType;
+
+    if (argc < 2) // HARRIS, FAST, BRISK, ORB, AKAZE, SIFT
         detectorType = "SHITOMASI";
     else
         detectorType = argv[1];
 
-    if (argc < 3)
+    if (argc < 3) // BRIEF, ORB, FREAK, AKAZE, SIFT
         descriptorType = "BRISK";
     else
         descriptorType = argv[2];
+
+    if (argc < 4) // MAT_BF, MAT_FLANN
+        matcherType = "MAT_BF";
+    else
+        matcherType = argv[3];
+
+    if (argc < 5) // SEL_NN, SEL_KNN
+        selectorType = "SEL_NN";
+    else
+        selectorType = argv[4];
+
 
     /* MAIN LOOP OVER ALL IMAGES */
 
@@ -105,6 +119,7 @@ int main(int argc, const char *argv[])
         img = cv::imread(imgFullFilename);
         cv::cvtColor(img, imgGray, cv::COLOR_BGR2GRAY);
 
+        //// STUDENT ASSIGNMENT
         //// Done MP.1 -> replace the following code with ring buffer of size dataBufferSize
         // Done in class CircleBuffer line 23
 
@@ -135,7 +150,7 @@ int main(int argc, const char *argv[])
         //// EOF STUDENT ASSIGNMENT
 
         //// STUDENT ASSIGNMENT
-        //// TASK MP.3 -> only keep keypoints on the preceding vehicle
+        //// Done MP.3 -> only keep keypoints on the preceding vehicle
 
         // only keep keypoints on the preceding vehicle
         bool bFocusOnVehicle = true;
@@ -199,13 +214,12 @@ int main(int argc, const char *argv[])
             /* MATCH KEYPOINT DESCRIPTORS */
 
             vector<cv::DMatch> matches;
-            string matcherType = "MAT_BF";        // MAT_BF, MAT_FLANN
+
             string descriptorType = "DES_BINARY"; // DES_BINARY, DES_HOG
-            string selectorType = "SEL_NN";       // SEL_NN, SEL_KNN
 
             //// STUDENT ASSIGNMENT
-            //// TASK MP.5 -> add FLANN matching in file matching2D.cpp
-            //// TASK MP.6 -> add KNN match selection and perform descriptor distance ratio filtering with t=0.8 in file matching2D.cpp
+            //// DONE MP.5 -> add FLANN matching in file matching2D.cpp
+            //// DONE MP.6 -> add KNN match selection and perform descriptor distance ratio filtering with t=0.8 in file matching2D.cpp
 
             matchDescriptors((dataBuffer.end() - 2)->keypoints, (dataBuffer.end() - 1)->keypoints,
                              (dataBuffer.end() - 2)->descriptors, (dataBuffer.end() - 1)->descriptors,

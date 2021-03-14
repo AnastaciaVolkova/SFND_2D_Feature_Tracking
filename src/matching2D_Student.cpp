@@ -17,22 +17,36 @@ void matchDescriptors(std::vector<cv::KeyPoint> &kPtsSource, std::vector<cv::Key
     {
         int normType = cv::NORM_HAMMING;
         matcher = cv::BFMatcher::create(normType, crossCheck);
+        cout << "BF matching" << endl;
     }
     else if (matcherType.compare("MAT_FLANN") == 0)
     {
-        // ...
+        if (descSource.type() != CV_32F)
+        { // OpenCV bug workaround : convert binary descriptors to floating point due to a bug in current OpenCV implementation
+            descSource.convertTo(descSource, CV_32F);
+            descRef.convertTo(descRef, CV_32F);
+        }
+        matcher = cv::DescriptorMatcher::create(cv::DescriptorMatcher::FLANNBASED);
+        cout << "MAT FLANN matching" << endl;
     }
 
     // perform matching task
     if (selectorType.compare("SEL_NN") == 0)
     { // nearest neighbor (best match)
-
         matcher->match(descSource, descRef, matches); // Finds the best match for each descriptor in desc1
+        cout << " NN with n=" << matches.size() << " matches";
     }
     else if (selectorType.compare("SEL_KNN") == 0)
-    { // k nearest neighbors (k=2)
-
-        // ...
+    {
+        std::vector<vector<cv::DMatch>> knn_matches;
+        matcher->knnMatch(descSource, descRef, knn_matches, 2);
+        double min_desc_ratio = 0.8;
+        for (auto i: knn_matches){
+          if (i[0].distance < i[1].distance*min_desc_ratio){
+            matches.push_back(i[0]);
+          }
+        }
+        cout << " KNN with n=" << matches.size() << " matches";
     }
 }
 
@@ -58,9 +72,9 @@ void descKeypoints(vector<cv::KeyPoint> &keypoints, cv::Mat &img, cv::Mat &descr
     } else if (descriptorType.compare("FREAK") == 0){
         extractor = cv::xfeatures2d::FREAK::create();
     } else if (descriptorType.compare("AKAZE") == 0){
-        extractor = cv::ORB::create();
+        extractor = cv::AKAZE::create();
     } else if (descriptorType.compare("SIFT") == 0){
-        extractor = cv::ORB::create();
+        extractor = cv::SIFT::create();
     }
     // perform feature description
     double t = (double)cv::getTickCount();
