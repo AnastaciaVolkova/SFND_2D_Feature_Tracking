@@ -56,7 +56,7 @@ public:
     int data_buffer_size_;
 };
 
-bool ReadCommandLine(int argc, const char* argv[], string& detectorType, string& descriptorType, string& matcherType, string& selectorType){
+bool ReadCommandLine(int argc, const char* argv[], string& detectorType, string& descriptorType, string& selectorType){
     int i = 1;
     if ( (argc == 2) && (std::string(argv[1]) == std::string("-h") ) ){
         std::cout << "-det detectorType -des descriptorType -mat matcherType -sel selectorType" << std::endl;
@@ -69,8 +69,6 @@ bool ReadCommandLine(int argc, const char* argv[], string& detectorType, string&
             detectorType = argv[i++];
         else if (us_in == "-des")
             descriptorType = argv[i++];
-        else if (us_in == "-mat")
-            matcherType = argv[i++];
         else if (us_in == "-sel")
             selectorType = argv[i++];
         else{
@@ -112,8 +110,11 @@ int main(int argc, const char *argv[])
     // descriptorType BRISK BRIEF, ORB, FREAK, AKAZE, SIFT
     // matcherType MAT_BF, MAT_FLANN
     // selectorType SEL_NN, SEL_KNN
-    if (ReadCommandLine(argc, argv, detectorType, descriptorType, matcherType, selectorType))
+    if (ReadCommandLine(argc, argv, detectorType, descriptorType, selectorType))
         return -1;
+
+    if ((descriptorType.compare("BRISK")==0)||(descriptorType.compare("BRIEF")==0) || (descriptorType.compare("ORB")==0))
+        matcherType = "MAT_BF";
 
     /* MAIN LOOP OVER ALL IMAGES */
 
@@ -227,7 +228,9 @@ int main(int argc, const char *argv[])
 
             vector<cv::DMatch> matches;
 
-            string descriptorType = "DES_BINARY"; // DES_BINARY, DES_HOG
+            string descriptorTypeBH = "DES_BINARY"; // DES_BINARY, DES_HOG
+            if (descriptorType.compare("SIFT") == 0)
+                descriptorTypeBH = "DES_HOG";
 
             //// STUDENT ASSIGNMENT
             //// DONE MP.5 -> add FLANN matching in file matching2D.cpp
@@ -235,7 +238,7 @@ int main(int argc, const char *argv[])
 
             matchDescriptors((dataBuffer.end() - 2)->keypoints, (dataBuffer.end() - 1)->keypoints,
                              (dataBuffer.end() - 2)->descriptors, (dataBuffer.end() - 1)->descriptors,
-                             matches, descriptorType, matcherType, selectorType);
+                             matches, descriptorTypeBH, matcherType, selectorType);
 
             //// EOF STUDENT ASSIGNMENT
 

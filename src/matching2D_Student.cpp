@@ -15,7 +15,7 @@ void matchDescriptors(std::vector<cv::KeyPoint> &kPtsSource, std::vector<cv::Key
 
     if (matcherType.compare("MAT_BF") == 0)
     {
-        int normType = cv::NORM_HAMMING;
+        int normType = descriptorType.compare("DES_BINARY") == 0? cv::NORM_HAMMING: cv::NORM_L2;
         matcher = cv::BFMatcher::create(normType, crossCheck);
         cout << "BF matching" << endl;
     }
@@ -66,21 +66,26 @@ void descKeypoints(vector<cv::KeyPoint> &keypoints, cv::Mat &img, cv::Mat &descr
     }
     else if (descriptorType.compare("BRIEF") == 0) /*ORB, FREAK, AKAZE, SIFT*/
     {
+        cout << "BRIEF descriptor extractor: ";
         extractor = cv::xfeatures2d::BriefDescriptorExtractor::create();
     } else if (descriptorType.compare("ORB") == 0){
+        cout << "ORB descriptor extractor: ";
         extractor = cv::ORB::create();
     } else if (descriptorType.compare("FREAK") == 0){
+        cout << "FREAK descriptor extractor: ";
         extractor = cv::xfeatures2d::FREAK::create();
     } else if (descriptorType.compare("AKAZE") == 0){
+        cout << "AKAZE descriptor extractor: ";
         extractor = cv::AKAZE::create();
     } else if (descriptorType.compare("SIFT") == 0){
+        cout << "SIFT descriptor extractor: ";
         extractor = cv::SIFT::create();
     }
     // perform feature description
     double t = (double)cv::getTickCount();
     extractor->compute(img, keypoints, descriptors);
     t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
-    cout << descriptorType << " descriptor extraction in " << 1000 * t / 1.0 << " ms" << endl;
+    cout << 1000 * t / 1.0 << " ms" << endl;
 }
 
 // Detect keypoints in image using the traditional Shi-Thomasi detector
@@ -162,7 +167,7 @@ void detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool
         }
     }
     t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
-    cout << "Harris corner detector with n=" << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+    cout << "Harris corner detector: n=" << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
 
     if (bVis){
         std::string window_name = "Harris corner detector";
@@ -180,23 +185,33 @@ void detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool
 
 void detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, std::string detectorType, bool bVis){
     cv::Ptr<cv::FeatureDetector> detector;
-    if (detectorType.compare("FAST"))
+    if (detectorType.compare("FAST") == 0){
+        cout << "FAST detector: ";
         detector = cv::FastFeatureDetector::create();
-    else if (detectorType.compare("BRISK"))
+    }
+    else if (detectorType.compare("BRISK") == 0){
+        cout << "BRISK detector: ";
         detector = cv::BRISK::create();
-    else if (detectorType.compare("ORB"))
+    }
+    else if (detectorType.compare("ORB") == 0){
+        cout << "ORB detector: ";
         detector = cv::ORB::create();
-    else if (detectorType.compare("AKAZE"))
+    }
+    else if (detectorType.compare("AKAZE") == 0){
+        cout << "AKAZE detector: ";
         detector = cv::AKAZE::create();
-    else if (detectorType.compare("SIFT"))
+    }
+    else if (detectorType.compare("SIFT") == 0){
+        cout << "SIFT detector: ";
         detector = cv::SIFT::create();
+    }
     else
         throw "Invalid detector type";
 
     double t = (double)cv::getTickCount();
     detector->detect(img, keypoints);
     t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
-    cout << detectorType + " detector with n= " << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+    cout << "n=" << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
 
     if (bVis){
         std::string window_name = detectorType + " feature detector";
