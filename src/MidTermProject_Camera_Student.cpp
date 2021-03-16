@@ -36,10 +36,6 @@ public:
         bool operator!=(const iterator& it){
             return it_ != it.it_;
         };
-        iterator& operator++(int i){
-            it_++;
-            return *this;
-        };
         T& operator*(){return *it_;};
         typename list<T>::iterator operator->(){return it_;};
     };
@@ -56,14 +52,15 @@ public:
     int data_buffer_size_;
 };
 
-bool ReadCommandLine(int argc, const char* argv[], string& detectorType, string& descriptorType, string& selectorType){
+bool ReadCommandLine(int argc, const char* argv[], string& detectorType, string& descriptorType, string& selectorType, bool& bVis){
     int i = 1;
+    string command_line_help = "-det detectorType -des descriptorType -sel selectorType -vis";
     if ( (argc == 2) && (std::string(argv[1]) == std::string("-h") ) ){
-        std::cout << "-det detectorType -des descriptorType -mat matcherType -sel selectorType" << std::endl;
+        std::cout << command_line_help << std::endl;
         return -1;
     }
 
-    while(i < argc-1){
+    while(i < argc){
         std::string us_in = string(argv[i++]);
         if  (us_in == "-det")
             detectorType = argv[i++];
@@ -71,9 +68,11 @@ bool ReadCommandLine(int argc, const char* argv[], string& detectorType, string&
             descriptorType = argv[i++];
         else if (us_in == "-sel")
             selectorType = argv[i++];
+        else if (us_in == "-vis")
+            bVis = strcmp(argv[i++], "0")? false: true;
         else{
             std::cout << "Invalid command line" << std::endl;
-            std::cout << "-det detectorType -des descriptorType -mat matcherType -sel selectorType" << std::endl;
+            std::cout << command_line_help << std::endl;
             return -1;
         }
     }
@@ -110,7 +109,7 @@ int main(int argc, const char *argv[])
     // descriptorType BRISK BRIEF, ORB, FREAK, AKAZE, SIFT
     // matcherType MAT_BF, MAT_FLANN
     // selectorType SEL_NN, SEL_KNN
-    if (ReadCommandLine(argc, argv, detectorType, descriptorType, selectorType))
+    if (ReadCommandLine(argc, argv, detectorType, descriptorType, selectorType, bVis))
         return -1;
 
     if ((descriptorType.compare("BRISK")==0)||(descriptorType.compare("BRIEF")==0) || (descriptorType.compare("ORB")==0))
@@ -154,11 +153,11 @@ int main(int argc, const char *argv[])
         //// -> HARRIS, FAST, BRISK, ORB, AKAZE, SIFT
 
         if (detectorType.compare("SHITOMASI") == 0)
-            detKeypointsShiTomasi(keypoints, imgGray, true);
+            detKeypointsShiTomasi(keypoints, imgGray, bVis);
         else if (detectorType.compare("HARRIS") == 0)
-            detKeypointsHarris(keypoints, imgGray, true);
+            detKeypointsHarris(keypoints, imgGray, bVis);
         else
-            detKeypointsModern(keypoints, imgGray, detectorType, true);
+            detKeypointsModern(keypoints, imgGray, detectorType, bVis);
 
         //// EOF STUDENT ASSIGNMENT
 
@@ -248,7 +247,6 @@ int main(int argc, const char *argv[])
             cout << "#4 : MATCH KEYPOINT DESCRIPTORS done" << endl;
 
             // visualize matches between current and previous image
-            bVis = true;
             if (bVis)
             {
                 cv::Mat matchImg = ((dataBuffer.end() - 1)->cameraImg).clone();
