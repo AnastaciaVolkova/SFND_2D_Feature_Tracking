@@ -54,7 +54,12 @@ public:
 
 bool ReadCommandLine(int argc, const char* argv[], string& detectorType, string& descriptorType, string& selectorType, string& matcherType, bool& bVis){
     int i = 1;
-    string command_line_help = "-det detectorType -des descriptorType -sel selectorType -mat matcherType -vis";
+    string command_line_help = "-det detectorType -des descriptorType -sel selectorType -mat matcherType -vis 0|1";
+    command_line_help += "\ndetectorType: SHITOMASI, HARRIS, FAST, BRISK, ORB, AKAZE, SIFT";
+    command_line_help += "\ndescriptorType: BRISK, BRIEF, ORB, FREAK, AKAZE, SIFT";
+    command_line_help += "\nmatcherType: MAT_BF, MAT_FLANN";
+    command_line_help += "\nselectorType: SEL_NN, SEL_KNN";
+
     if ( (argc == 2) && (std::string(argv[1]) == std::string("-h") ) ){
         std::cout << command_line_help << std::endl;
         return -1;
@@ -109,6 +114,7 @@ int main(int argc, const char *argv[])
 
     // detectorType SHITOMASI, HARRIS, FAST, BRISK, ORB, AKAZE, SIFT
     // descriptorType BRISK, BRIEF, ORB, FREAK, AKAZE, SIFT
+    // matcherType MAT_BF, MAT_FLANN
     // selectorType SEL_NN, SEL_KNN
     if (ReadCommandLine(argc, argv, detectorType, descriptorType, selectorType, matcherType, bVis))
         return -1;
