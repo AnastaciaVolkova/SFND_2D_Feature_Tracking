@@ -3,7 +3,16 @@
 
 using namespace std;
 
-#define WRITE_IMAGE
+//#define WRITE_IMAGE
+
+// Compute distribution if keypoints neighborhood MP.7
+void GetDistribution(const vector<cv::KeyPoint>& keypoints, float& mean, float& rms){
+    float sum_neigh_size = accumulate(keypoints.begin(), keypoints.end(), 0.0f, [](float a, const cv::KeyPoint& kp){return a + kp.size;});
+    mean = sum_neigh_size / keypoints.size();
+    float sum_sq_diff = accumulate(keypoints.begin(), keypoints.end(), 0.0f,
+    [&mean](float a, const cv::KeyPoint& kp){return a + powf(kp.size-mean, 2.0f);});
+    rms = sqrtf(sum_sq_diff)/keypoints.size();
+}
 
 // Find best matches for keypoints in two camera images based on several matching methods
 void matchDescriptors(std::vector<cv::KeyPoint> &kPtsSource, std::vector<cv::KeyPoint> &kPtsRef, cv::Mat &descSource, cv::Mat &descRef,
@@ -17,7 +26,7 @@ void matchDescriptors(std::vector<cv::KeyPoint> &kPtsSource, std::vector<cv::Key
     {
         int normType = descriptorType.compare("DES_BINARY") == 0? cv::NORM_HAMMING: cv::NORM_L2;
         matcher = cv::BFMatcher::create(normType, crossCheck);
-        cout << "BF matching" << endl;
+        cout << "BF matcher uses ";
     }
     else if (matcherType.compare("MAT_FLANN") == 0)
     {
@@ -27,18 +36,21 @@ void matchDescriptors(std::vector<cv::KeyPoint> &kPtsSource, std::vector<cv::Key
             descRef.convertTo(descRef, CV_32F);
         }
         matcher = cv::DescriptorMatcher::create(cv::DescriptorMatcher::FLANNBASED);
-        cout << "MAT FLANN matching" << endl;
+        cout << "MAT FLANN matcher uses ";
     }
 
     // perform matching task
     if (selectorType.compare("SEL_NN") == 0)
     { // nearest neighbor (best match)
+        double t = (double)cv::getTickCount();
         matcher->match(descSource, descRef, matches); // Finds the best match for each descriptor in desc1
-        cout << " NN with n=" << matches.size() << " matches";
+        t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
+        cout << "selector NN with n=" << matches.size() << " matches in t="<< 1000 * t / 1.0 << " ms" << endl;
     }
     else if (selectorType.compare("SEL_KNN") == 0)
     {
         std::vector<vector<cv::DMatch>> knn_matches;
+        double t = (double)cv::getTickCount();
         matcher->knnMatch(descSource, descRef, knn_matches, 2);
         double min_desc_ratio = 0.8;
         for (auto i: knn_matches){
@@ -46,7 +58,8 @@ void matchDescriptors(std::vector<cv::KeyPoint> &kPtsSource, std::vector<cv::Key
             matches.push_back(i[0]);
           }
         }
-        cout << " KNN with n=" << matches.size() << " matches";
+        t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
+        cout << "selector KNN with n=" << matches.size() << " matches in t=" << 1000 * t / 1.0 << " ms" << endl;
     }
 }
 
@@ -62,6 +75,7 @@ void descKeypoints(vector<cv::KeyPoint> &keypoints, cv::Mat &img, cv::Mat &descr
         int octaves = 3;           // detection octaves (use 0 to do single scale)
         float patternScale = 1.0f; // apply this scale to the pattern used for sampling the neighbourhood of a keypoint.
 
+        cout << "BRISK descriptor extractor: ";
         extractor = cv::BRISK::create(threshold, octaves, patternScale);
     }
     else if (descriptorType.compare("BRIEF") == 0) /*ORB, FREAK, AKAZE, SIFT*/
@@ -80,12 +94,14 @@ void descKeypoints(vector<cv::KeyPoint> &keypoints, cv::Mat &img, cv::Mat &descr
     } else if (descriptorType.compare("SIFT") == 0){
         cout << "SIFT descriptor extractor: ";
         extractor = cv::SIFT::create();
+    } else {
+        throw "Invalid descriptpr type";
     }
     // perform feature description
     double t = (double)cv::getTickCount();
     extractor->compute(img, keypoints, descriptors);
     t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
-    cout << 1000 * t / 1.0 << " ms" << endl;
+    cout << "n=" << descriptors.rows << " in t=" << 1000 * t / 1.0 << " ms" << endl;
 }
 
 // Detect keypoints in image using the traditional Shi-Thomasi detector
@@ -108,14 +124,18 @@ void detKeypointsShiTomasi(vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool b
     // add corners to result vector
     for (auto it = corners.begin(); it != corners.end(); ++it)
     {
-
         cv::KeyPoint newKeyPoint;
         newKeyPoint.pt = cv::Point2f((*it).x, (*it).y);
         newKeyPoint.size = blockSize;
         keypoints.push_back(newKeyPoint);
     }
     t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
-    cout << "Shi-Tomasi detection with n=" << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+    cout << "Shi-Tomasi detector: n=" << keypoints.size() << " keypoints in t=" << 1000 * t / 1.0 << " ms";
+
+    // Compute distribution if keypoints neighborhood MP.7
+    float mean, rms;
+    GetDistribution(keypoints, mean, rms);
+    cout << " m1=" << mean << " rms=" << rms << endl;
 
     // visualize results
     if (bVis)
@@ -167,7 +187,12 @@ void detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool
         }
     }
     t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
-    cout << "Harris corner detector: n=" << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+    cout << "Harris detector: n=" << keypoints.size() << " keypoints in t=" << 1000 * t / 1.0 << " ms";
+
+    // Compute distribution if keypoints neighborhood MP.7
+    float mean, rms;
+    GetDistribution(keypoints, mean, rms);
+    cout << " m1=" << mean << " rms=" << rms << endl;
 
     if (bVis){
         std::string window_name = "Harris corner detector";
@@ -211,7 +236,12 @@ void detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, std:
     double t = (double)cv::getTickCount();
     detector->detect(img, keypoints);
     t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
-    cout << "n=" << keypoints.size() << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+    cout << "n=" << keypoints.size() << " keypoints in t=" << 1000 * t / 1.0 << " ms";
+
+    // Compute distribution if keypoints neighborhood MP.7
+    float mean, rms;
+    GetDistribution(keypoints, mean, rms);
+    cout << " m1=" << mean << " rms=" << rms << endl;
 
     if (bVis){
         std::string window_name = detectorType + " feature detector";

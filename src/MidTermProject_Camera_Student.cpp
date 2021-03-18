@@ -52,9 +52,9 @@ public:
     int data_buffer_size_;
 };
 
-bool ReadCommandLine(int argc, const char* argv[], string& detectorType, string& descriptorType, string& selectorType, bool& bVis){
+bool ReadCommandLine(int argc, const char* argv[], string& detectorType, string& descriptorType, string& selectorType, string& matcherType, bool& bVis){
     int i = 1;
-    string command_line_help = "-det detectorType -des descriptorType -sel selectorType -vis";
+    string command_line_help = "-det detectorType -des descriptorType -sel selectorType -mat matcherType -vis";
     if ( (argc == 2) && (std::string(argv[1]) == std::string("-h") ) ){
         std::cout << command_line_help << std::endl;
         return -1;
@@ -68,8 +68,10 @@ bool ReadCommandLine(int argc, const char* argv[], string& detectorType, string&
             descriptorType = argv[i++];
         else if (us_in == "-sel")
             selectorType = argv[i++];
+        else if (us_in == "-mat")
+            matcherType = argv[i++];
         else if (us_in == "-vis")
-            bVis = strcmp(argv[i++], "0")? false: true;
+            bVis = strcmp(argv[i++], "0")==0? false: true;
         else{
             std::cout << "Invalid command line" << std::endl;
             std::cout << command_line_help << std::endl;
@@ -103,17 +105,13 @@ int main(int argc, const char *argv[])
     string detectorType("SHITOMASI");
     string descriptorType("BRISK");
     string matcherType ("MAT_BF");
-    string selectorType("SEL_NN");
+    string selectorType("SEL_KNN");
 
     // detectorType SHITOMASI, HARRIS, FAST, BRISK, ORB, AKAZE, SIFT
-    // descriptorType BRISK BRIEF, ORB, FREAK, AKAZE, SIFT
-    // matcherType MAT_BF, MAT_FLANN
+    // descriptorType BRISK, BRIEF, ORB, FREAK, AKAZE, SIFT
     // selectorType SEL_NN, SEL_KNN
-    if (ReadCommandLine(argc, argv, detectorType, descriptorType, selectorType, bVis))
+    if (ReadCommandLine(argc, argv, detectorType, descriptorType, selectorType, matcherType, bVis))
         return -1;
-
-    if ((descriptorType.compare("BRISK")==0)||(descriptorType.compare("BRIEF")==0) || (descriptorType.compare("ORB")==0))
-        matcherType = "MAT_BF";
 
     /* MAIN LOOP OVER ALL IMAGES */
 
@@ -180,8 +178,6 @@ int main(int argc, const char *argv[])
                 (el.pt.y >= vehicleRect.y) &&
                 (el.pt.y <= (vehicleRect.y + vehicleRect.height));});
             keypoints = std::move(keypoints_filtered);
-            std::cout << keypoints_filtered.size() << std::endl;
-            std::cout << keypoints.size() << std::endl;
         }
 
         //// EOF STUDENT ASSIGNMENT
