@@ -33,6 +33,13 @@ See the classroom instruction and code comments for more details on each of thes
 3. Compile: `cmake .. && make`
 4. Run it: `./2D_feature_tracking`.
 
+2D_feature_tracking -det detectorType -des descriptorType -sel selectorType -mat matcherType -vis 0|1
+detectorType: SHITOMASI, HARRIS, FAST, BRISK, ORB, AKAZE, SIFT
+descriptorType: BRISK, BRIEF, ORB, FREAK, AKAZE, SIFT
+matcherType: MAT_BF, MAT_FLANN
+selectorType: SEL_NN, SEL_KNN
+
+
 ## Done Tasks
 * _MP.7 Performance Evaluation 1_ is in **detector.xlsx** (distribution of keypoints neighborhood size)
 * _MP.8 Performance Evaluation 2_ is in **matchers.xlsx**
