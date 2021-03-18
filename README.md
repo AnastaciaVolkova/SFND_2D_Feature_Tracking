@@ -32,3 +32,17 @@ See the classroom instruction and code comments for more details on each of thes
 2. Make a build directory in the top level directory: `mkdir build && cd build`
 3. Compile: `cmake .. && make`
 4. Run it: `./2D_feature_tracking`.
+
+## Done Tasks
+* _MP.7 Performance Evaluation 1_ is in **detector.xlsx** (distribution of keypoints neighborhood size)
+* _MP.8 Performance Evaluation 2_ is in **matchers.xlsx**
+* _MP.9 Performance Evaluation 3_ is in **timing.xlsx** (the best performance combinations are highlighted in yellow)
+
+ ## Results
+### From performance point of view the best combinations are
+|Combination|t_det + t_des, ms|
+|---|---|
+|FAST_BRIEF|5.02502|
+|FAST_ORB|8.879675|
+|FAST_BRISK|10.150614|
+
